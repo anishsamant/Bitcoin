@@ -13,7 +13,7 @@ VERSION = 1
 
 class Blockchain:
     def __init__(self):
-        self.genesisBlock()
+        pass
 
     # function to write data to disk
     def writeToDisk(self, block):
@@ -36,15 +36,19 @@ class Blockchain:
         timestamp = int(time.time())
         coinbaseInstance = CoinbaseTx(blockHeight)
         coinbaseTx = coinbaseInstance.coinbaseTransaction()
-        
-        merkleRoot = ''
+        merkleRoot = coinbaseTx.txId
         bits = 'ffff001f'
         blockHeader = BlockHeader(VERSION, prevBlockHash, merkleRoot, timestamp, bits)
         blockHeader.mine()
+        print(f"Block {blockHeight} successfully mined with nonce value of {blockHeader.nonce}")
         self.writeToDisk([Block(blockHeight, 1, blockHeader.__dict__, 1, coinbaseTx.to_dict()).__dict__])
 
     # iterative function to create blocks
     def main(self):
+        lastBlock = self.fetchLastBlock()
+        if lastBlock is None:
+            self.genesisBlock()
+
         while True:
             lastBlock = self.fetchLastBlock()
             blockHeight = lastBlock['height'] + 1
