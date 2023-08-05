@@ -5,6 +5,7 @@ ZERO_HASH = b'\0' * 32
 REWARD = 50
 PRIVATE_KEY = '6415168560025015419828792186365996364777874576344984328293555123949832143928'
 MINER_ADDRESS = '1MaKZWUdKdo8qbLLYxYVmp1Thu7nXxL4xQ'
+SIGHASH_ALL = 1
 
 class CoinbaseTx:
     def __init__(self, blockHeight):
@@ -45,19 +46,47 @@ class Tx:
     # function to serialize our data
     def serialize(self):
         result = int_to_little_endian(self.version, 4)
+        
         result += encode_varint(len(self.tx_inputs))
-
         for tx_in in self.tx_inputs:
             result += tx_in.serialize()
 
         result += encode_varint(len(self.tx_outputs))
-
         for tx_out in self.tx_outputs:
             result += tx_out.serialize()
 
         result += int_to_little_endian(self.locktime, 4)
 
         return result
+    
+    # function to generate signature hash of transaction input
+    def sig_hash(self, input_index, script_pubkey):
+        sigh = int_to_little_endian(self.version, 4)
+
+        sigh += encode_varint(len(self.tx_inputs))
+        for i, tx_in in enumerate(self.tx_inputs):
+            if i == input_index:
+                sigh += TxInput(tx_in.prev_tx, tx_in.prev_index, script_pubkey).serialize()
+            else:
+                sigh += TxInput(tx_in.prev_tx, tx_in.prev_index).serialize()
+
+        sigh += encode_varint(len(self.tx_outputs))
+        for tx_out in self.tx_outputs:
+            sigh += tx_out.serialize()
+
+        sigh += int_to_little_endian(self.locktime, 4)
+        sigh += int_to_little_endian(SIGHASH_ALL, 4)
+
+        h256 = hash256(sigh)
+        return int.from_bytes(h256, 'big')
+    
+    # function to sign transaction input
+    def sign_input(self, input_index, private_key, script_pubkey):
+        signature_hash = self.sig_hash(input_index, script_pubkey)
+        der = private_key.sign(signature_hash).der()
+        sig = der + SIGHASH_ALL.to_bytes(1, 'big')
+        sec = private_key.point.sec()   # gives compressed public key
+        self.tx_inputs[input_index].script_sig = Script([sig, sec])
 
     # function to check if transaction is a coinbase transaction or not
     def is_coinbase(self):

@@ -13,6 +13,7 @@ sys.path.append('/Legion_Files/Anish/Projects/MyProjects/Bitcoin')
 
 from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Point
 from Blockchain.Backend.util.util import hash160, hash256
+from Blockchain.Backend.core.database.database import AccountDB
 import secrets 
 
 class Account:
@@ -29,15 +30,14 @@ class Account:
         G = Sha256Point(Gx, Gy)
 
         while True:
-            privateKey = secrets.randbits(256)
-            privateKeyHex = hex(privateKey)
+            self.privateKey = secrets.randbits(256)
             intN = int(self.N)
-            if privateKey == 0 or privateKey >= intN:
+            if self.privateKey == 0 or self.privateKey >= intN:
                 print("invalid private key. Generating another...")
             else:
                 break
             
-        uncompressedPublicKey = privateKey * G    
+        uncompressedPublicKey = self.privateKey * G    
         xCordinate = uncompressedPublicKey.x
         yCordinate = uncompressedPublicKey.y
 
@@ -74,14 +74,14 @@ class Account:
             num, mod = divmod(num, 58)
             result = BASE58_ALPHABET[mod] + result
 
-        publicAddress = prefix + result
+        self.publicAddress = prefix + result
 
-        print(f"private key: {privateKey}")
-        print(f"private key hex: {privateKeyHex}")
+        print(f"private key: {self.privateKey}")
         print(f"uncompresed public key: {uncompressedPublicKey}")
-        print(f"Public Address {publicAddress}")
+        print(f"Public Address {self.publicAddress}")
 
 if __name__ == '__main__':
     account = Account()
     account.createKeys()
+    AccountDB().write([account.__dict__])
 
