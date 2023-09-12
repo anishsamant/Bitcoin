@@ -88,6 +88,13 @@ class Tx:
         sec = private_key.point.sec()   # gives compressed public key
         self.tx_inputs[input_index].script_sig = Script([sig, sec])
 
+    # function to verify transaction input
+    def verify_input(self, input_index, script_pubkey):
+        txIn = self.tx_inputs[input_index]
+        z = self.sig_hash(input_index, script_pubkey)
+        combined = txIn.script_sig + script_pubkey
+        return combined.evaluate(z)
+
     # function to check if transaction is a coinbase transaction or not
     def is_coinbase(self):
         """

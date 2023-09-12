@@ -2,10 +2,14 @@
 # Only push and pop operations
 
 from Blockchain.Backend.util.util import int_to_little_endian, encode_varint
+from Blockchain.Backend.core.EllepticCurve.op import OP_CODE_FUNCTION
 
 class Script:
     def __init__(self, cmds = None):
         self.cmds = [] if cmds == None else cmds
+
+    def __add__(self, other):
+        return Script(self.cmds + other.cmds)
 
     def serialize(self):
         # initialize what we'll send back
@@ -40,8 +44,31 @@ class Script:
         total = len(result)
         # encode_varint the total length of the result and prepend
         return encode_varint(total) + result
+    
+    # function to evaluate if transaction input is valid and verified
+    def evaluate(self, z):
+        cmds = self.cmds[:]
+        stack = []
+        while len(cmds) > 0:
+            cmd = cmds.pop(0)
+
+            if type(cmd) == int:
+                operation = OP_CODE_FUNCTION[cmd]
+                if cmd == 172:
+                    if not operation(stack, z):
+                        print(f"Error in Signature Verification")
+                        return False
+                
+                elif not operation(stack):
+                    print(f"Error in Signature Verification")
+                    return False
+            else:
+                stack.append(cmd)
+        
+        return True
+
 
     @classmethod
     def p2pkh_script(cls, h160):
         # takes hash160and returns the p2pkh script public key
-        return Script([0x76, 0xa9, h160, 0x88, 0xac])
+        return Script([0x76, 0xa9, h160, 0x88, 0xac]) # [118, 169, hash, 136, 172]

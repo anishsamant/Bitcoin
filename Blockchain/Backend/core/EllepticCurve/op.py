@@ -7,6 +7,7 @@ from Blockchain.Backend.util.util import hash160
 from Blockchain.Backend.core.EllepticCurve.EllepticCurve import Sha256Point, Signature
 
 
+# function to duplicate last element on stack
 def op_dup(stack):
 
     if len(stack) < 1:
@@ -15,7 +16,7 @@ def op_dup(stack):
 
     return True
 
-
+# function to generate h160 of last element of stack
 def op_hash160(stack):
     if len(stack) < 1:
         return False
@@ -24,7 +25,7 @@ def op_hash160(stack):
     stack.append(h160)
     return True
 
-
+# function to check if last two elements of stack are equal
 def op_equal(stack):
     if len(stack) < 2:
         return False
@@ -39,7 +40,7 @@ def op_equal(stack):
 
     return True
 
-
+# function to verify last two elements were equal
 def op_verify(stack):
     if len(stack) < 1:
         False
@@ -51,10 +52,11 @@ def op_verify(stack):
     return True
 
 
+# function to verify if last two elements of stack are equal
 def op_equalverify(stack):
     return op_equal(stack) and op_verify(stack)
 
-
+# function to verify the signatures
 def op_checksig(stack, z):
     if len(stack) < 1:
         return False

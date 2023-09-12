@@ -14,8 +14,9 @@ ZERO_HASH = '0' * 64
 VERSION = 1
 
 class Blockchain:
-    def __init__(self, utxos):
+    def __init__(self, utxos, mempool):
         self.utxos = utxos
+        self.mempool = mempool
 
     # function to write data to disk
     def writeToDisk(self, block):
@@ -66,8 +67,9 @@ class Blockchain:
 if __name__ == "__main__":
     with Manager() as manager:
         utxos = manager.dict()
+        mempool = manager.dict()
 
-        webapp = Process(target = main, args = (utxos,))
+        webapp = Process(target = main, args = (utxos, mempool))
         webapp.start()
-        blockchain = Blockchain(utxos)
+        blockchain = Blockchain(utxos, mempool)
         blockchain.main()

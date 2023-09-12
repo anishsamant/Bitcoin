@@ -50,7 +50,7 @@ class sendBTC:
                 for index, txout in enumerate(txObj.tx_outputs):
                     if txout.script_pubkey.cmds[2] == self.fromPubkeyHash:
                         self.total += txout.amount
-                        prev_tx = bytes.fromhex(txObj.id())
+                        prev_tx = bytes.fromhex(txByte)
                         txIns.append(TxInput(prev_tx, index))
             else:
                 break
@@ -89,7 +89,8 @@ class sendBTC:
         if self.isBalanceEnough:
             self.txOuts = self.prepareTxOut()
             self.txObj = Tx(1, self.txIns, self.txOuts, 0)
+            self.txObj.txId = self.txObj.id()
             self.signTx()
-            return True
+            return self.txObj
         
         return False
